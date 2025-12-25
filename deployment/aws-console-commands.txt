@@ -1,0 +1,37 @@
+# AWS Console PowerShell Commands for ExploreSpeak Deployment
+# Copy and paste these commands into your AWS Console PowerShell session
+
+# STEP 1: Verify Environment and Find API Gateway ID
+Get-STSCallerIdentity
+Get-AGRestApi | Select-Object Id, Name, CreatedDate | Format-Table
+
+# STEP 2: Navigate to Project Directory (adjust path as needed)
+cd path\to\your\explorespeak\project
+
+# STEP 3: Complete Deployment (replace YOUR_API_GATEWAY_ID with actual ID)
+.\deployment\deploy-aws-powershell.ps1 -ApiGatewayId "YOUR_API_GATEWAY_ID"
+
+# OR STEP 3: Step-by-Step Deployment
+# 3a: Create DynamoDB tables
+.\deployment\dynamodb-setup-powershell.ps1
+
+# 3b: Deploy Lambda functions
+.\deployment\lambda-deploy-powershell.ps1
+
+# 3c: Setup API Gateway (creates new if no ID provided)
+.\deployment\api-gateway-setup-powershell.ps1 -CreateNewApi $true
+
+# 3d: Deploy frontend files
+.\deployment\frontend-integration-powershell.ps1 -ApiGatewayId "YOUR_API_GATEWAY_ID"
+
+# 3e: Test deployment
+.\deployment\test-deployment-powershell.ps1 -ApiGatewayId "YOUR_API_GATEWAY_ID"
+
+# STEP 4: Verify Deployment
+Get-DDBTable | Where-Object {$_.TableName -like "ExploreSpeak*"}
+Get-LMFunction | Where-Object {$_.FunctionName -like "explorespeak*"}
+Get-AGResources -RestApiId "YOUR_API_GATEWAY_ID"
+
+# Expected API URL after deployment:
+# https://YOUR_API_GATEWAY_ID.execute-api.us-east-1.amazonaws.com/prod/vocabulary
+# https://YOUR_API_GATEWAY_ID.execute-api.us-east-1.amazonaws.com/prod/adaptive/recommendations
